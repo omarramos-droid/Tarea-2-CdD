@@ -17,11 +17,12 @@ from K_NN import *
 if __name__ == "__main__":
     
     
-    nb_model = NaiveBayes()
-    lda_model = LDA()
-    qda_model = QDA()
-    knn_model = KNN()
-    
+    # nb_model = NaiveBayes()
+    # lda_model = LDA()
+    # qda_model = QDA()
+    # knn_model = KNN()
+    fisher_model=Fisher()
+    fisher_model_balance=FisherBalance()
     
     
     

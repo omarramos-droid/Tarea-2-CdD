@@ -133,6 +133,315 @@ def KNN(k_max=20):
 
     return knn_final
 
+def Fisher():
+    """
+    Implementación de Fisher Linear Discriminant (binario)
+    
+    Retorna
+    -------
+    dict : métricas de desempeño y modelo
+    """
+ 
+
+    # Preprocesar datos
+    X_train, X_test, y_train, y_test, X_train_scaled, X_test_scaled, _ = preprocesar_datos(escalar_lda=True)
+
+    # Convertir a arrays numpy
+    X_train = np.array(X_train_scaled)
+    X_test = np.array(X_test_scaled)
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+
+    # ================================
+    # 1. Separar datos por clase
+    # ================================
+    X0 = X_train[y_train == 0]  # Clase 0
+    X1 = X_train[y_train == 1]  # Clase 1
+
+    # ================================
+    # 2. Medias de clase
+    # ================================
+    m0 = np.mean(X0, axis=0).reshape(-1, 1)  # Media clase 0
+    m1 = np.mean(X1, axis=0).reshape(-1, 1)  # Media clase 1
+    dm = m1 - m0  # Diferencia de medias
+
+    # ================================
+    # 3. Matriz de dispersión intra-clase Sw
+    # ================================
+    # Calcular matrices de covarianza para cada clase    if len(X0) > 1:
+    S0 = np.cov(X0, rowvar=False)
+
+    S1 = np.cov(X1, rowvar=False)
+
+    Sw = S0 + S1
+
+    # ================================
+    # 4. Vector discriminante w (solución óptima)
+    # ================================
+    # w = Sw^(-1) * (m1 - m0)
+    w = np.linalg.inv(Sw) @ dm
+    w = w.ravel()  # Convertir a vector 1D
+
+
+    # ================================
+    # 5. Proyección de datos
+    # ================================
+    z_train = X_train @ w
+    z_test = X_test @ w
+
+    # ================================
+    # 6. Encontrar umbral óptimo
+    # ================================
+    # Usar la media de las medias proyectadas como umbral
+    z0_mean = np.mean(z_train[y_train == 0])
+    z1_mean = np.mean(z_train[y_train == 1])
+    threshold = (z0_mean + z1_mean) / 2
+
+    # ================================
+    # 7. Predicciones
+    # ================================
+    y_pred = (z_test > threshold).astype(int)
+
+    # ================================
+    # 8. Calcular probabilidades para AUC (aproximación)
+    # ================================
+    # Normalizar proyecciones a [0,1] para simular probabilidades
+    z_min = np.min(z_test)
+    z_max = np.max(z_test)
+    y_prob = (z_test - z_min) / (z_max - z_min)
+
+    # ================================
+    # 9. Métricas completas
+    # ================================
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, zero_division=0)
+    recall = recall_score(y_test, y_pred, zero_division=0)
+    f1 = f1_score(y_test, y_pred, zero_division=0)
+    auc = roc_auc_score(y_test, y_prob)
+    cm = confusion_matrix(y_test, y_pred)
+
+    # ================================
+    # 10. Visualizaciones
+    # ================================
+    
+    # Gráfico 1: Proyecciones 1D
+    plt.figure(figsize=(12, 4))
+    
+    # Histograma de proyecciones por clase
+    plt.hist(z_test[y_test == 0], bins=30, alpha=0.7, label='Clase 0', color='blue', density=True)
+    plt.hist(z_test[y_test == 1], bins=30, alpha=0.7, label='Clase 1', color='red', density=True)
+    plt.axvline(threshold, color='black', linestyle='--', linewidth=2, label=f'Umbral = {threshold:.2f}')
+    plt.xlabel('Valor Proyectado z = wᵀx')
+    plt.ylabel('Densidad')
+    plt.title('Proyección Fisher - Distribución 1D')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+    # Gráfico 2: Matriz de confusión
+    from sklearn.metrics import ConfusionMatrixDisplay
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['No', 'Sí'])
+    disp.plot(cmap='Blues', ax=plt.gca())
+    plt.title('Matriz de Confusión - Fisher')
+
+    plt.tight_layout()
+    plt.show()
+
+    # ================================
+    # 11. Resultados numéricos
+    # ================================
+    print("=== FISHER LINEAR DISCRIMINANT ===")
+    print(f"Accuracy: {accuracy:.4f}")
+    print(f"Precisión: {precision:.4f}")
+    print(f"Recall: {recall:.4f}")
+    print(f"F1-score: {f1:.4f}")
+    print(f"AUC: {auc:.4f}")
+    print("Matriz de Confusión:")
+    print(cm)
+    print(f"\nParámetros del modelo:")
+    print(f"Vector w (primeros 5 elementos): {w[:5]}")
+    print(f"Umbral óptimo: {threshold:.4f}")
+    print(f"Separación entre clases: {np.abs(z1_mean - z0_mean):.4f}")
+
+    # ================================
+    # 12. Retornar resultados completos
+    # ================================
+    return {
+        'accuracy': accuracy,
+        'precision': precision,
+        'recall': recall,
+        'f1_score': f1,
+        'auc': auc,
+        'confusion_matrix': cm,
+        'model_params': {
+            'w': w,
+            'threshold': threshold,
+            'm0': m0.ravel(),
+            'm1': m1.ravel()
+        },
+        'projections_train': z_train,
+        'projections_test': z_test
+    }
+
+
+def FisherBalance():
+    """
+    Implementación de Fisher Linear Discriminant (binario) 
+    con ajuste de umbral para datos desbalanceados.
+    """
+    from sklearn.metrics import (
+        accuracy_score, precision_score, recall_score, f1_score,
+        roc_auc_score, confusion_matrix, balanced_accuracy_score
+    )
+    from sklearn.metrics import ConfusionMatrixDisplay
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    # Preprocesar datos
+    X_train, X_test, y_train, y_test, X_train_scaled, X_test_scaled, _ = preprocesar_datos(escalar_lda=True)
+
+    # Convertir a arrays numpy
+    X_train = np.array(X_train_scaled)
+    X_test = np.array(X_test_scaled)
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+
+    # ================================
+    # 1. Separar datos por clase
+    # ================================
+    X0 = X_train[y_train == 0]
+    X1 = X_train[y_train == 1]
+
+    # ================================
+    # 2. Medias y Sw
+    # ================================
+    m0 = np.mean(X0, axis=0).reshape(-1, 1)
+    m1 = np.mean(X1, axis=0).reshape(-1, 1)
+    dm = m1 - m0
+
+    S0 = np.cov(X0, rowvar=False)
+    S1 = np.cov(X1, rowvar=False)
+    Sw = S0 + S1
+
+    # ================================
+    # 3. Vector discriminante
+    # ================================
+    w = np.linalg.inv(Sw) @ dm
+    w = w.ravel()
+
+    # ================================
+    # 4. Proyección de datos
+    # ================================
+    z_train = X_train @ w
+    z_test = X_test @ w
+
+    # ================================
+    # 5. Búsqueda de umbral óptimo (por F1)
+    # ================================
+    thresholds = np.linspace(np.min(z_test), np.max(z_test), 200)
+    f1_scores, recalls, precisions = [], [], []
+
+    for t in thresholds:
+        y_pred_tmp = (z_test > t).astype(int)
+        f1_scores.append(f1_score(y_test, y_pred_tmp, zero_division=0))
+        recalls.append(recall_score(y_test, y_pred_tmp, zero_division=0))
+        precisions.append(precision_score(y_test, y_pred_tmp, zero_division=0))
+
+    best_idx = np.argmax(f1_scores)
+    threshold = thresholds[best_idx]
+
+    # ================================
+    # 6. Predicciones finales
+    # ================================
+    y_pred = (z_test > threshold).astype(int)
+
+    # Normalizar proyecciones como "probabilidades"
+    z_min, z_max = np.min(z_test), np.max(z_test)
+    y_prob = (z_test - z_min) / (z_max - z_min)
+
+    # ================================
+    # 7. Métricas
+    # ================================
+    accuracy = accuracy_score(y_test, y_pred)
+    balanced_acc = balanced_accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, zero_division=0)
+    recall = recall_score(y_test, y_pred, zero_division=0)
+    f1 = f1_score(y_test, y_pred, zero_division=0)
+    auc = roc_auc_score(y_test, y_prob)
+    cm = confusion_matrix(y_test, y_pred)
+
+    # ================================
+    # 8. Visualizaciones
+    # ================================
+    # Histograma de proyecciones
+    plt.figure(figsize=(12, 4))
+    plt.hist(z_test[y_test == 0], bins=30, alpha=0.7, label='Clase 0', color='blue', density=True)
+    plt.hist(z_test[y_test == 1], bins=30, alpha=0.7, label='Clase 1', color='red', density=True)
+    plt.axvline(threshold, color='black', linestyle='--', linewidth=2, label=f'Umbral óptimo = {threshold:.2f}')
+    plt.xlabel('Proyección z = wᵀx')
+    plt.ylabel('Densidad')
+    plt.title('Proyección Fisher - Distribución 1D')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.show()
+
+    # Curva F1/recall/precision vs umbral
+    plt.figure(figsize=(10, 4))
+    plt.plot(thresholds, f1_scores, label="F1-score", color='red')
+    plt.plot(thresholds, recalls, label="Recall", color='blue')
+    plt.plot(thresholds, precisions, label="Precision", color='green')
+    plt.axvline(threshold, color='black', linestyle='--', linewidth=1.5)
+    plt.xlabel("Umbral")
+    plt.ylabel("Métrica")
+    plt.title("Evolución de métricas según el umbral")
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.show()
+
+    # Matriz de confusión
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Clase 0', 'Clase 1'])
+    disp.plot(cmap='Blues')
+    plt.title("Matriz de Confusión - Fisher")
+    plt.show()
+
+    # ================================
+    # 9. Resultados
+    # ================================
+    print("=== FISHER LINEAR DISCRIMINANT (con ajuste de umbral) ===")
+    print(f"Accuracy: {accuracy:.4f}")
+    print(f"Balanced Accuracy: {balanced_acc:.4f}")
+    print(f"Precisión: {precision:.4f}")
+    print(f"Recall: {recall:.4f}")
+    print(f"F1-score: {f1:.4f}")
+    print(f"AUC: {auc:.4f}")
+    print("Matriz de Confusión:")
+    print(cm)
+    print(f"\nUmbral óptimo (por F1): {threshold:.4f}")
+    print(f"Separación entre clases proyectadas: {abs(np.mean(z_train[y_train==1]) - np.mean(z_train[y_train==0])):.4f}")
+
+    return {
+        'accuracy': accuracy,
+        'balanced_accuracy': balanced_acc,
+        'precision': precision,
+        'recall': recall,
+        'f1_score': f1,
+        'auc': auc,
+        'confusion_matrix': cm,
+        'model_params': {
+            'w': w,
+            'threshold': threshold,
+            'm0': m0.ravel(),
+            'm1': m1.ravel()
+        },
+        'projections_train': z_train,
+        'projections_test': z_test,
+        'threshold_curve': {
+            'thresholds': thresholds,
+            'f1_scores': f1_scores,
+            'recalls': recalls,
+            'precisions': precisions
+        }
+    }
 
 
 
