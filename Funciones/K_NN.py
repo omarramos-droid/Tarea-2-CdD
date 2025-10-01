@@ -5,7 +5,7 @@ from Script_DATA import preprocesar_datos
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import cross_val_score
 from sklearn.naive_bayes import GaussianNB
-
+from sklearn.metrics import ConfusionMatrixDisplay
 
 # -----------------------------
 # 1) Naive Bayes
@@ -168,7 +168,7 @@ def Fisher():
     # ================================
     # 3. Matriz de dispersión intra-clase Sw
     # ================================
-    # Calcular matrices de covarianza para cada clase    if len(X0) > 1:
+
     S0 = np.cov(X0, rowvar=False)
 
     S1 = np.cov(X1, rowvar=False)
@@ -176,16 +176,12 @@ def Fisher():
     Sw = S0 + S1
 
     # ================================
-    # 4. Vector discriminante w (solución óptima)
+    # 4. Vector discriminante
     # ================================
     # w = Sw^(-1) * (m1 - m0)
     w = np.linalg.inv(Sw) @ dm
-    w = w.ravel()  # Convertir a vector 1D
+    w = w.ravel()
 
-
-    # ================================
-    # 5. Proyección de datos
-    # ================================
     z_train = X_train @ w
     z_test = X_test @ w
 
@@ -224,33 +220,29 @@ def Fisher():
     # 10. Visualizaciones
     # ================================
     
-    # Gráfico 1: Proyecciones 1D
-    plt.figure(figsize=(12, 4))
-    
-    # Histograma de proyecciones por clase
+    # Gráfico 1: Distribución de proyecciones
+
+    plt.figure(figsize=(8, 6))
     plt.hist(z_test[y_test == 0], bins=30, alpha=0.7, label='Clase 0', color='blue', density=True)
     plt.hist(z_test[y_test == 1], bins=30, alpha=0.7, label='Clase 1', color='red', density=True)
     plt.axvline(threshold, color='black', linestyle='--', linewidth=2, label=f'Umbral = {threshold:.2f}')
     plt.xlabel('Valor Proyectado z = wᵀx')
     plt.ylabel('Densidad')
-    plt.title('Proyección Fisher - Distribución 1D')
+    plt.title('Proyección Fisher con la media como umbral')
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.show()
-    # Gráfico 2: Matriz de confusión
-    from sklearn.metrics import ConfusionMatrixDisplay
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['No', 'Sí'])
-    disp.plot(cmap='Blues', ax=plt.gca())
-    plt.title('Matriz de Confusión - Fisher')
 
+    # Gráfica 2: Matriz de confusión
+    plt.figure(figsize=(6, 5))
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['No', 'Sí'])
+    disp.plot(cmap='Blues')
+    plt.title('Matriz de Confusión - Fisher Umbral media')
     plt.tight_layout()
     plt.show()
 
-    # ================================
-    # 11. Resultados numéricos
-    # ================================
-    print("=== FISHER LINEAR DISCRIMINANT ===")
+    print("=== FISHER LINEAR DISCRIMINANT Umbral media ===")
     print(f"Accuracy: {accuracy:.4f}")
     print(f"Precisión: {precision:.4f}")
     print(f"Recall: {recall:.4f}")
@@ -293,7 +285,7 @@ def FisherBalance():
         accuracy_score, precision_score, recall_score, f1_score,
         roc_auc_score, confusion_matrix, balanced_accuracy_score
     )
-    from sklearn.metrics import ConfusionMatrixDisplay
+    
     import numpy as np
     import matplotlib.pyplot as plt
 
@@ -380,7 +372,7 @@ def FisherBalance():
     plt.axvline(threshold, color='black', linestyle='--', linewidth=2, label=f'Umbral óptimo = {threshold:.2f}')
     plt.xlabel('Proyección z = wᵀx')
     plt.ylabel('Densidad')
-    plt.title('Proyección Fisher - Distribución 1D')
+    plt.title('Proyección Fisher con umbral óptimo')
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.show()
@@ -388,10 +380,10 @@ def FisherBalance():
     # Curva F1/recall/precision vs umbral
     plt.figure(figsize=(10, 4))
     plt.plot(thresholds, f1_scores, label="F1-score", color='red')
-    plt.plot(thresholds, recalls, label="Recall", color='blue')
-    plt.plot(thresholds, precisions, label="Precision", color='green')
-    plt.axvline(threshold, color='black', linestyle='--', linewidth=1.5)
+    plt.plot(thresholds, recalls, label="Recall(Sensibilidad) ", color='blue')
+    plt.axvline(threshold,label="Umbral optimo", color='black', linestyle='--', linewidth=1.5)
     plt.xlabel("Umbral")
+    plt.xlim(0, 2) 
     plt.ylabel("Métrica")
     plt.title("Evolución de métricas según el umbral")
     plt.legend()
@@ -401,7 +393,7 @@ def FisherBalance():
     # Matriz de confusión
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Clase 0', 'Clase 1'])
     disp.plot(cmap='Blues')
-    plt.title("Matriz de Confusión - Fisher")
+    plt.title("Matriz de Confusión - Fisher umbral óptimo")
     plt.show()
 
     # ================================

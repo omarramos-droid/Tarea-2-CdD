@@ -5,21 +5,6 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 
-def descargar_datos():
-    """
-    Descarga y guarda el dataset Bank Marketing del repositorio UCI
-    """
-    os.makedirs("data", exist_ok=True)
-        
-    bank_marketing = fetch_ucirepo(id=222)
-        
-    X = bank_marketing.data.features 
-    y = bank_marketing.data.targets 
-
-    X.to_csv("data/features.csv", index=False)
-    y.to_csv("data/targets.csv", index=False)
-
-    
 def preprocesar_datos(
     escalar_lda=False, test_size=0.3, random_state=13, balancear=False, sampling_strategy=0.5):
     """
