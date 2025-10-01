@@ -1,0 +1,9 @@
+# Ignorar carpetas de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar carpeta de datos
+data/
+
