@@ -9,7 +9,6 @@ def preprocesar_datos(
     escalar_lda=False, test_size=0.3, random_state=13, balancear=False, sampling_strategy=0.5):
     """
     Preprocesa datos para clasificadores, con opción de balancear clases.
-    Incluye manejo diferenciado de valores faltantes según su mecanismo (MCAR, MAR, MNAR).
 
     Parameters
     ----------
@@ -114,36 +113,8 @@ def preprocesar_datos(
 
 
 
-   
-def obtener_estadisticas_dataset(X_train, X_test, y_train, y_test):
-    """
-    Genera estadísticas del dataset procesado
-    
-    Parameters
-    ----------
-    X_train, X_test : DataFrame
-        Conjuntos de entrenamiento y prueba
-    y_train, y_test : Series
-        Variables objetivo
-        
-    Returns
-    -------
-    dict
-        Diccionario con estadísticas del dataset
-    """
-    stats = {
-        'n_entrenamiento': X_train.shape[0],
-        'n_prueba': X_test.shape[0],
-        'n_variables': X_train.shape[1],
-        'prop_clase_1_entrenamiento': np.mean(y_train),
-        'prop_clase_1_prueba': np.mean(y_test),
-        'balance_entrenamiento': f"{sum(y_train == 0)}:{sum(y_train == 1)}",
-        'balance_prueba': f"{sum(y_test == 0)}:{sum(y_test == 1)}"
-    }
-   
-    
 
-    return stats
+
 
 
 
