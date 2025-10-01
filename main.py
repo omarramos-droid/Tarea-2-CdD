@@ -15,7 +15,8 @@ from K_NN import *
 
 
 if __name__ == "__main__":
-    
+    #Crea datos y carpeta
+    gdatos()  
 # Estas funciones tardan en promedio 3 minutos en implementarse
 # Arogando 8 imagenes, las cuales están en el reporte
     nb_model = NaiveBayes()

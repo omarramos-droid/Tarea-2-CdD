@@ -5,6 +5,27 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 
+
+def gdatos():
+    os.makedirs("data", exist_ok=True)
+
+# Descargar dataset Bank Marketing (ID = 222 en UCI)
+    bank_marketing = fetch_ucirepo(id=222)
+  
+# fetch dataset 
+    bank_marketing = fetch_ucirepo(id=222) 
+  
+# data (as pandas dataframes) 
+    X = bank_marketing.data.features 
+    y = bank_marketing.data.targets 
+
+# Separar características y etiquetas
+    X = bank_marketing.data.features
+    y = bank_marketing.data.targets
+
+# Save data
+    X.to_csv("data/features.csv", index=False)
+    y.to_csv("data/targets.csv", index=False)
 def preprocesar_datos(
     escalar_lda=False, test_size=0.3, random_state=13, balancear=False, sampling_strategy=0.5):
     """
