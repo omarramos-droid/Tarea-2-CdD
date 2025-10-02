@@ -28,7 +28,7 @@ if __name__ == "__main__":
     nb_model = NaiveBayes()
     lda_model = LDA()
     qda_model = QDA()
-    #knn_model = KNN()
+    knn_model = KNN()
     fisher_model=Fisher()
     fisher_model_balance=FisherBalance()
     
@@ -36,7 +36,7 @@ if __name__ == "__main__":
      
     # ===== Casos que se pueden correr =====
     print('------------------ Parte II ------------------')
-    print('Tarda de 1 a 2 min en correr')
+    print('Tarda de 4 a 5 min en correr')
     '''
     Casos:
         misma-dificil
@@ -67,13 +67,13 @@ if __name__ == "__main__":
     heatmapdiff(df_final_mean)
     
     # grafico de puntos y aprendizaje
-    #grafica_puntos_y_aprendizaje_qda(50, 150,caso ,  casos_norm)
+    grafica_puntos_y_aprendizaje_qda(50, 150,caso ,  casos_normales)
     
     # grafico de puntos y aprendizaje
-    #grafica_puntos_y_aprendizaje_nb(50, 50,caso ,  casos_normales)
+    grafica_puntos_y_aprendizaje_nb(50, 50,caso ,  casos_normales)
     
     # grafico de puntos y aprendizaje
-    #grafica_puntos_y_aprendizaje_knn(50, 50,caso ,  casos_normales)
+    grafica_puntos_y_aprendizaje_knn(50, 50,caso ,  casos_normales)
     
     
     
